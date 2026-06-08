@@ -751,9 +751,8 @@
   .ph-person-card-meta .tag{background:#eef2f7;color:#334155;padding:1px 6px;border-radius:4px;font-size:10px}
   .ph-person-card-meta .pill{font-size:9.5px;padding:1px 7px}
 
-  /* Dashboard Metrics — 3 columns × 2 rows of compact charts */
-  .ph-metrics-grid{grid-template-columns:repeat(3, minmax(0, 1fr));gap:14px}
-  @media(max-width:1100px){.ph-metrics-grid{grid-template-columns:repeat(2, 1fr)}}
+  /* Dashboard Metrics — 2 columns × 2 rows of compact charts */
+  .ph-metrics-grid{grid-template-columns:repeat(2, minmax(0, 1fr));gap:14px}
   @media(max-width:700px){.ph-metrics-grid{grid-template-columns:1fr}}
   .chart-wrap.ph-mini{height:220px}
   /* Execution Tracker → Metrics & Visualizations: 3 charts per row, compact height */
@@ -766,7 +765,36 @@
   .ph-metrics-grid .ph-progress-meta{flex:0 0 76px;font-size:11px}
   .ph-metrics-grid .ph-progress-row{padding:8px 4px;gap:10px}
 
-  .ph-usecase-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px;margin-top:8px}
+  /* Horizontal scroller for In Progress & Upcoming Activities — arrows at extreme edges */
+  .ph-uc-scroller{position:relative;margin-top:8px}
+  .ph-usecase-grid{
+    display:flex;gap:14px;
+    overflow-x:auto;scroll-behavior:smooth;
+    padding:4px 52px 4px 52px;
+    /* Hide scrollbar — navigation is via the arrow buttons */
+    scrollbar-width:none;-ms-overflow-style:none
+  }
+  .ph-usecase-grid::-webkit-scrollbar{display:none}
+  /* Cards grow to fill available width (up to a cap), so 4 visible cards consume the
+     whole row without leaving empty space. Additional cards beyond ~4 stay at the
+     basis size and scroll horizontally via the arrow buttons. */
+  .ph-usecase-grid > .ph-uc-card{flex:1 0 270px;max-width:380px;min-width:0}
+  .ph-usecase-grid > .ph-uc-card .ph-uc-name{font-size:14px}
+  .ph-uc-scroll-btn{
+    position:absolute;top:50%;transform:translateY(-50%);
+    width:38px;height:38px;border-radius:50%;
+    background:#fff;border:1px solid var(--border);
+    color:#475569;cursor:pointer;font-size:20px;font-weight:600;
+    display:flex;align-items:center;justify-content:center;line-height:1;
+    box-shadow:0 4px 12px rgba(15,23,42,.10);
+    z-index:5;
+    transition:background .15s ease, color .15s ease, border-color .15s ease, transform .15s ease
+  }
+  .ph-uc-scroll-btn:hover{background:#e8f0fe;color:#1a73e8;border-color:#1a73e8}
+  .ph-uc-scroll-btn:active{transform:translateY(-50%) scale(.92)}
+  .ph-uc-scroll-btn.left {left:6px}
+  .ph-uc-scroll-btn.right{right:6px}
+  .ph-uc-scroll-btn[disabled]{opacity:.35;cursor:not-allowed}
   .ph-uc-card{
     background:linear-gradient(135deg,#fff 0%,#fafbfc 100%);
     border:1px solid var(--border);border-radius:12px;
@@ -784,15 +812,16 @@
   .ph-uc-head{display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);padding-bottom:8px;flex-wrap:wrap}
   .ph-uc-name{
     font-size:15px;font-weight:700;color:#0f172a;
-    display:flex;align-items:center;gap:8px
+    display:flex;align-items:center;gap:8px;
+    min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap
   }
   .ph-uc-name::before{
     content:"";display:inline-block;width:10px;height:10px;border-radius:50%;
     background:linear-gradient(135deg,#1a73e8,#4285F4);
     box-shadow:0 0 8px rgba(26,115,232,.5)
   }
-  .ph-uc-counts{margin-left:auto;display:flex;gap:5px;flex-wrap:wrap}
-  .ph-uc-counts .pp{padding:2px 8px;border-radius:99px;font-size:10.5px;font-weight:600;letter-spacing:.3px}
+  .ph-uc-counts{margin-left:auto;display:flex;gap:3px;flex-wrap:wrap;flex-shrink:0}
+  .ph-uc-counts .pp{padding:1px 6px;border-radius:99px;font-size:9.5px;font-weight:600;letter-spacing:.2px;white-space:nowrap}
   .ph-uc-counts .pp.done{background:#e6f4ea;color:#137333}
   .ph-uc-counts .pp.wip{background:#fef7e0;color:#b06000}
   .ph-uc-counts .pp.pend{background:#eef1f6;color:#5f6368}
@@ -1458,70 +1487,8 @@
 
 <!-- =================== DASHBOARD TAB =================== -->
 <section class="tab-panel active" id="tab-progress">
-  <!-- Section 1 — Metrics (6 compact charts in a 3×2 grid) -->
-  <div id="phMetricsEmpty" class="ph-empty" style="display:none">No Progress Hub data loaded yet — click ⟳ Refresh Data.</div>
-  <div id="phMetricsContent">
-    <section class="grid ph-metrics-grid">
-      <div class="card">
-        <div class="section-title">
-          <h2>🎯 Completion Status</h2>
-          <span class="hint">overall breakdown</span>
-        </div>
-        <div class="chart-wrap ph-mini"><canvas id="phStatusMixChart"></canvas></div>
-      </div>
-      <div class="card">
-        <div class="section-title">
-          <h2>📊 Status by Use Case</h2>
-          <span class="hint">tasks split by status</span>
-        </div>
-        <div class="chart-wrap ph-mini"><canvas id="phStatusByUcChart"></canvas></div>
-      </div>
-      <div class="card">
-        <div class="section-title">
-          <h2>📈 Completion Trend</h2>
-          <span class="hint">cumulative tasks completed over time</span>
-        </div>
-        <div class="chart-wrap ph-mini"><canvas id="phCompletionTrendChart"></canvas></div>
-      </div>
-      <div class="card">
-        <div class="section-title">
-          <h2>👥 Workload by Owner</h2>
-          <span class="hint">tasks per associate, by status</span>
-        </div>
-        <div class="chart-wrap ph-mini"><canvas id="phOwnerChart"></canvas></div>
-      </div>
-      <div class="card">
-        <div class="section-title">
-          <h2>🏷️ Tasks by Area</h2>
-          <span class="hint">workstream distribution</span>
-        </div>
-        <div class="chart-wrap ph-mini"><canvas id="phAreaChart"></canvas></div>
-      </div>
-      <div class="card">
-        <div class="section-title">
-          <h2>⏱️ Avg Cycle Time</h2>
-          <span class="hint">days from start to end, per Usecase</span>
-        </div>
-        <div class="chart-wrap ph-mini"><canvas id="phCycleTimeChart"></canvas></div>
-      </div>
-    </section>
-  </div>
-
-  <!-- Section 2 — Milestones timeline (sourced from the Milestones table) -->
-  <div class="card" style="margin-top:16px">
-    <div class="section-title">
-      <h2>🗺️ Milestones</h2>
-      <span class="hint">grouped by status, sorted by date</span>
-    </div>
-    <div class="filters">
-      <input id="mSearch" type="search" placeholder="Search milestones..." />
-      <button class="btn clear" id="mClear" type="button">Clear</button>
-    </div>
-    <div id="milestonesList"></div>
-  </div>
-
-  <!-- Section 2 — Progress Highlights (Weekly + Monthly side by side) -->
-  <div class="card" style="margin-top:16px">
+  <!-- Section 1 — Progress Highlights (Weekly + Monthly side by side) -->
+  <div class="card">
     <div class="ph-highlights-grid">
       <div class="ph-highlights-col">
         <div class="ph-highlights-header">
@@ -1548,16 +1515,54 @@
     </div>
   </div>
 
-  <!-- Section 3 — Pipeline by Use Case (in-progress + future work, assignees) -->
+  <!-- Section 2 — Metrics (2 compact charts) -->
+  <div id="phMetricsEmpty" class="ph-empty" style="display:none;margin-top:16px">No Progress Hub data loaded yet — click ⟳ Refresh Data.</div>
+  <div id="phMetricsContent">
+    <section class="grid ph-metrics-grid" style="margin-top:16px">
+      <div class="card">
+        <div class="section-title">
+          <h2>🎯 Completion Status</h2>
+          <span class="hint">overall breakdown</span>
+        </div>
+        <div class="chart-wrap ph-mini"><canvas id="phStatusMixChart"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="section-title">
+          <h2>📊 Status by Use Case</h2>
+          <span class="hint">tasks split by status</span>
+        </div>
+        <div class="chart-wrap ph-mini"><canvas id="phStatusByUcChart"></canvas></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Section 3 — In Progress & Upcoming Activities (grouped by Use Case, horizontally scrollable) -->
   <div class="card" style="margin-top:16px">
     <div class="section-title">
       <h2>📋 In Progress &amp; Upcoming Activities</h2>
       <span class="hint">grouped by Use Case — assignees shown</span>
     </div>
-    <div id="phUseCaseGrid" class="ph-usecase-grid"></div>
+    <div class="ph-uc-scroller">
+      <button class="ph-uc-scroll-btn left"  id="phUcScrollPrev" type="button" aria-label="Scroll left">‹</button>
+      <div id="phUseCaseGrid" class="ph-usecase-grid"></div>
+      <button class="ph-uc-scroll-btn right" id="phUcScrollNext" type="button" aria-label="Scroll right">›</button>
+    </div>
   </div>
 
-  <!-- Section 4 — Collapsible 'All Task Details' (Kanban-style, grouped by person) -->
+  <!-- Section 4 — Milestones timeline (sourced from the Milestones table) -->
+  <div class="card" style="margin-top:16px">
+    <div class="section-title">
+      <h2>🗺️ Milestones</h2>
+      <span class="hint">grouped by status, sorted by date</span>
+    </div>
+    <div class="filters">
+      <input id="mSearch" type="search" placeholder="Search milestones..." />
+      <button class="btn clear" id="mClear" type="button">Clear</button>
+    </div>
+    <div id="milestonesList"></div>
+  </div>
+
+  <!-- Section 5 — Collapsible 'Task Summary' (Kanban-style, grouped by person) -->
   <div class="card" style="margin-top:16px">
     <button id="phTasksToggle" class="ph-collapse-toggle" type="button" aria-expanded="false" aria-controls="phTasksCollapse">
       <span class="ph-collapse-arrow" aria-hidden="true">▾</span>
@@ -2781,7 +2786,6 @@ function phBuildCard(item){
     <div class="pc-meta">
       ${statusPill}
       ${item.usecase ? `<span class="uc">${escapeHtml(item.usecase)}</span>` : ""}
-      ${item.area ? `<span class="tag">${escapeHtml(item.area)}</span>` : ""}
       ${item.owner ? `<span class="owner">👤 ${escapeHtml(item.owner)}</span>` : ""}
       ${dateText ? `<span>📅 ${dateText}</span>` : ""}
     </div>
@@ -3194,149 +3198,13 @@ function renderPhMetrics(){
     }
   });
 
-  // 3) Completion Trend — cumulative completed tasks over time (line + filled area)
+  // Completion Trend, Workload by Owner, Tasks by Area, and Avg Cycle Time were
+  // removed from the Dashboard. Destroy any leftover instances so cached canvases
+  // don't keep rendering after a data refresh.
   destroy("phCompletionTrendChart");
-  const completedSorted = prog
-    .filter(p => normalizeStatus(p.status) === "Completed" && p.end)
-    .sort((a,b) => new Date(a.end) - new Date(b.end));
-  const trendLabels = completedSorted.map(p => new Date(p.end).toLocaleDateString(undefined,{month:"short",day:"2-digit"}));
-  const trendData   = completedSorted.map((_, i) => i + 1);
-  charts.phCompletionTrendChart = new Chart($("#phCompletionTrendChart"), {
-    type: "line",
-    data: {
-      labels: trendLabels,
-      datasets: [{
-        label: "Cumulative completed",
-        data: trendData,
-        borderColor: "#0f9d58",
-        backgroundColor: (ctx) => vGradient(ctx, "rgba(15,157,88,.28)", "rgba(15,157,88,.02)"),
-        fill: true, borderWidth: 3, tension: 0.3,
-        pointRadius: 4, pointHoverRadius: 6,
-        pointBackgroundColor: "#0f9d58", pointBorderColor: "#fff", pointBorderWidth: 2
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false, animation: SHARED_ANIM,
-      interaction: { mode: "index", intersect: false },
-      scales: {
-        y: { beginAtZero: true, ...SHARED_GRID_X, ticks: { precision: 0, color: "#64748b" } },
-        x: { ...SHARED_GRID_Y }
-      },
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          ...SHARED_TOOLTIP,
-          callbacks: {
-            title: (items) => items[0] ? `Completed by ${items[0].label}` : "",
-            label:  (c)    => ` ${c.parsed.y} task${c.parsed.y===1?"":"s"} done · ${escapeHtml((completedSorted[c.dataIndex]||{}).task||"")}`
-          }
-        }
-      }
-    }
-  });
-
-  // 4) Workload by Owner — vertical stacked bar
-  const ownerCounts = {};
-  prog.forEach(p => {
-    const ns = normalizeStatus(p.status);
-    (p.owner||"-").split(/[\/,]/).map(x=>x.trim()).filter(Boolean).forEach(o => {
-      if (!ownerCounts[o]) ownerCounts[o] = {};
-      ownerCounts[o][ns] = (ownerCounts[o][ns]||0) + 1;
-    });
-  });
-  const ownerLabels = Object.keys(ownerCounts).sort((a,b) =>
-    Object.values(ownerCounts[b]).reduce((x,y)=>x+y,0) - Object.values(ownerCounts[a]).reduce((x,y)=>x+y,0)
-  );
   destroy("phOwnerChart");
-  charts.phOwnerChart = new Chart($("#phOwnerChart"), {
-    type: "bar",
-    data: {
-      labels: ownerLabels,
-      datasets: statusOrder.map(s => ({
-        label: s,
-        data: ownerLabels.map(o => ownerCounts[o][s] || 0),
-        backgroundColor: (ctx) => vGradient(ctx, colorTop[s], colorBottom[s]),
-        hoverBackgroundColor: colorBottom[s],
-        borderRadius: 6, borderSkipped: false, borderWidth: 0, stack: "s",
-        barPercentage: .75, categoryPercentage: .85
-      }))
-    },
-    options: {
-      responsive:true, maintainAspectRatio:false, animation:SHARED_ANIM,
-      scales: { x:{stacked:true, ...SHARED_GRID_Y}, y:{stacked:true, ...SHARED_GRID_X, beginAtZero:true} },
-      plugins: {
-        legend:{position:"bottom", labels:{usePointStyle:true, pointStyle:"circle", boxWidth:8, padding:14}},
-        tooltip:{ ...SHARED_TOOLTIP, mode:"index" }
-      }
-    }
-  });
-
-  // 5) Tasks by Area — doughnut showing workstream distribution
-  const areaCounts = {};
-  prog.forEach(p => { const a = (p.area||"(none)").trim() || "(none)"; areaCounts[a] = (areaCounts[a]||0) + 1; });
-  const areaLabels = Object.keys(areaCounts).sort((a,b) => areaCounts[b] - areaCounts[a]);
-  // Brand-aware palette that loops if there are more areas than colors
-  const areaPalette = ["#1a73e8","#0f9d58","#f4b400","#db4437","#4285F4","#9aa0a6","#34a853","#ea4335"];
   destroy("phAreaChart");
-  charts.phAreaChart = new Chart($("#phAreaChart"), {
-    type: "doughnut",
-    data: {
-      labels: areaLabels,
-      datasets: [{
-        data: areaLabels.map(a => areaCounts[a]),
-        backgroundColor: areaLabels.map((_,i) => areaPalette[i % areaPalette.length]),
-        hoverBackgroundColor: areaLabels.map((_,i) => areaPalette[i % areaPalette.length]),
-        borderColor:"#fff", borderWidth:3, hoverOffset:12, hoverBorderWidth:4
-      }]
-    },
-    options: {
-      responsive:true, maintainAspectRatio:false, cutout:"62%",
-      animation: { ...SHARED_ANIM, animateRotate:true, animateScale:true },
-      plugins: {
-        legend:{position:"bottom", labels:{usePointStyle:true, pointStyle:"circle", boxWidth:9, padding:10, font:{size:11}}},
-        tooltip:{ ...SHARED_TOOLTIP }
-      }
-    }
-  });
-
-  // 6) Avg Cycle Time by Use Case — horizontal bar.
-  // Inclusive of both Start and End days. Feb 16 → Feb 20 spans 5 days.
-  const cyclesByUc = {};
-  prog.forEach(p => {
-    if (!p.usecase || !p.start || !p.end) return;
-    const days = ((new Date(p.end) - new Date(p.start)) / 86400000) + 1;
-    if (days < 1) return;
-    if (!cyclesByUc[p.usecase]) cyclesByUc[p.usecase] = [];
-    cyclesByUc[p.usecase].push(days);
-  });
-  const cycleUcs = Object.keys(cyclesByUc);
-  const sortedCycle = cycleUcs.map(u => {
-    const arr = cyclesByUc[u];
-    return { u, v: Math.round(arr.reduce((s,v)=>s+v,0) / arr.length) };
-  }).sort((a,b) => a.v - b.v);
   destroy("phCycleTimeChart");
-  charts.phCycleTimeChart = new Chart($("#phCycleTimeChart"), {
-    type: "bar",
-    data: {
-      labels: sortedCycle.map(s => s.u),
-      datasets: [{
-        label: "Avg days",
-        data: sortedCycle.map(s => s.v),
-        backgroundColor: (ctx) => hGradient(ctx, "#8AB4F8", "#1a73e8"),
-        hoverBackgroundColor: "#1a73e8",
-        borderRadius: 6, borderSkipped: false, borderWidth: 0,
-        barPercentage: .7, categoryPercentage: .85
-      }]
-    },
-    options: {
-      indexAxis:"y", responsive:true, maintainAspectRatio:false, animation:SHARED_ANIM,
-      plugins: {
-        legend: { display: false },
-        tooltip: { ...SHARED_TOOLTIP, callbacks: { label: (c) => ` ${c.parsed.x} day${c.parsed.x===1?"":"s"} avg` } }
-      },
-      scales: { x:{ ...SHARED_GRID_X, beginAtZero:true, ticks:{precision:0, color:"#64748b"} }, y: SHARED_GRID_Y }
-    }
-  });
 }
 
 function renderProgressHub(){
@@ -3440,6 +3308,27 @@ function renderProgressHub(){
   wirePhNav("phWeekNext",  +1, false);
   wirePhNav("phMonthPrev", -1, true);
   wirePhNav("phMonthNext", +1, true);
+
+  // Use Case horizontal scroller — left/right arrows shift by one card width.
+  const ucScroller = $("#phUseCaseGrid");
+  const ucPrev = $("#phUcScrollPrev");
+  const ucNext = $("#phUcScrollNext");
+  if (ucScroller && ucPrev && ucNext){
+    const cardWidth = () => {
+      const c = ucScroller.querySelector(".ph-uc-card");
+      return c ? c.offsetWidth + 14 : 354;  // card width + grid gap
+    };
+    ucPrev.onclick = () => ucScroller.scrollBy({left:-cardWidth(), behavior:"smooth"});
+    ucNext.onclick = () => ucScroller.scrollBy({left: cardWidth(), behavior:"smooth"});
+    // Toggle disabled state at the ends
+    const updateArrows = () => {
+      const max = ucScroller.scrollWidth - ucScroller.clientWidth;
+      ucPrev.disabled = ucScroller.scrollLeft <= 1;
+      ucNext.disabled = ucScroller.scrollLeft >= max - 1;
+    };
+    ucScroller.onscroll = updateArrows;
+    requestAnimationFrame(updateArrows);
+  }
 
   // All Task Details — toggle expand/collapse + lazy render of the person-grouped kanban.
   const phTasksToggle = $("#phTasksToggle");

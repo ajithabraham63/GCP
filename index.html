@@ -4118,6 +4118,17 @@ function renderMilestones(){
       <span><span class="sw done"></span>Completed</span>
       <span><span class="sw upcoming"></span>Upcoming</span>
     </div>`;
+
+  // Auto-scroll the timeline so the TODAY pin sits at the centre of the visible
+  // viewport on page load. Wait one frame for layout to settle (Chart.js / fonts
+  // can briefly shift widths) and another for the wrap to size correctly.
+  requestAnimationFrame(() => {
+    const wrap   = list.querySelector(".roadmap-wrap");
+    const todayEl = list.querySelector(".roadmap-today");
+    if (!wrap || !todayEl) return;
+    const target = todayEl.offsetLeft - (wrap.clientWidth / 2);
+    wrap.scrollTo({ left: Math.max(0, target), behavior: "smooth" });
+  });
 }
 
 /* ---------------- Task table ---------------- */

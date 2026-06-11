@@ -3094,7 +3094,6 @@ function renderPhPersonKanban(){
         <div class="ph-person-card-title">${escapeHtml(t.task)}</div>
         <div class="ph-person-card-meta">
           ${t.usecase ? `<span class="tag" style="background:#e8f0fe;color:#174ea6;font-weight:600">${escapeHtml(t.usecase)}</span>` : ""}
-          ${t.area ? `<span class="tag">${escapeHtml(t.area)}</span>` : ""}
           ${t.week ? `<span class="tag">${escapeHtml(t.week)}</span>` : ""}
           ${dateText ? `<span>📅 ${dateText}</span>` : ""}
           <span class="pill ${meta.cls}">${escapeHtml(ns||"-")}</span>

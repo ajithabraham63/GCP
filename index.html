@@ -522,6 +522,34 @@
     background:#eef2f7;color:#334155;padding:1px 7px;border-radius:99px;font-size:10.5px
   }
 
+  /* ====== Collapsible Dashboard sections ====== */
+  .ph-section{padding:0;overflow:hidden}
+  .ph-section-toggle{
+    width:100%;display:flex;align-items:center;gap:12px;
+    background:none;border:0;padding:16px;cursor:pointer;
+    text-align:left;color:inherit;
+    transition:background .15s ease
+  }
+  .ph-section-toggle:hover{background:#f8fafc}
+  .ph-section-title{font-size:16px;font-weight:600;color:#0f172a;flex:0 0 auto}
+  .ph-section-meta{font-size:12px;color:var(--muted);font-weight:500;flex:1}
+  .ph-section-toggle .ph-collapse-arrow{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:26px;height:26px;border-radius:50%;
+    background:#eef2f7;color:#475569;font-size:13px;
+    transition:transform .25s cubic-bezier(.34,1.56,.64,1), background .15s ease;
+    flex:0 0 26px
+  }
+  .ph-section-toggle:hover .ph-collapse-arrow{background:#e8f0fe;color:#1a73e8}
+  .ph-section-toggle[aria-expanded="true"] .ph-collapse-arrow{transform:rotate(180deg)}
+  .ph-section-body{padding:0 16px 16px;animation:fadeUp .25s ease both}
+  .ph-section-body[hidden]{display:none !important}
+
+  /* On Hold variants for the use case cards */
+  .ph-uc-counts .pp.hold{background:#fce8e6;color:#a50e0e}
+  .ph-uc-item.hold{border-left:3px solid #db4437}
+  .ph-uc-item.done{border-left:3px solid #0f9d58}
+
   /* Collapsible "All Task Details" — toggle button + person-grouped kanban */
   .ph-collapse-toggle{
     width:100%;display:flex;align-items:center;gap:12px;
@@ -1487,89 +1515,128 @@
 
 <!-- =================== DASHBOARD TAB =================== -->
 <section class="tab-panel active" id="tab-progress">
-  <!-- Section 1 — Progress Highlights (Weekly + Monthly side by side) -->
-  <div class="card">
-    <div class="ph-highlights-grid">
-      <div class="ph-highlights-col">
-        <div class="ph-highlights-header">
-          <button class="ph-nav-btn" id="phWeekPrev" type="button" aria-label="Previous week">‹</button>
-          <div class="ph-highlights-title">
-            <h3>🗓️ Weekly Accomplishments</h3>
-            <div class="ph-period-label" id="phWeekLabel">—</div>
-          </div>
-          <button class="ph-nav-btn" id="phWeekNext" type="button" aria-label="Next week">›</button>
-        </div>
-        <div id="phWeekList" class="ph-list-col"></div>
-      </div>
-      <div class="ph-highlights-col">
-        <div class="ph-highlights-header">
-          <button class="ph-nav-btn" id="phMonthPrev" type="button" aria-label="Previous month">‹</button>
-          <div class="ph-highlights-title">
-            <h3>🏆 Monthly Accomplishments</h3>
-            <div class="ph-period-label" id="phMonthLabel">—</div>
-          </div>
-          <button class="ph-nav-btn" id="phMonthNext" type="button" aria-label="Next month">›</button>
-        </div>
-        <div id="phMonthList" class="ph-list-col"></div>
-      </div>
-    </div>
-  </div>
 
-  <!-- Section 2 — Metrics (2 compact charts) -->
-  <div id="phMetricsEmpty" class="ph-empty" style="display:none;margin-top:16px">No Progress Hub data loaded yet — click ⟳ Refresh Data.</div>
-  <div id="phMetricsContent">
-    <section class="grid ph-metrics-grid" style="margin-top:16px">
-      <div class="card">
-        <div class="section-title">
-          <h2>🎯 Completion Status</h2>
-          <span class="hint">overall breakdown</span>
-        </div>
-        <div class="chart-wrap ph-mini"><canvas id="phStatusMixChart"></canvas></div>
-      </div>
-      <div class="card">
-        <div class="section-title">
-          <h2>📊 Status by Use Case</h2>
-          <span class="hint">tasks split by status</span>
-        </div>
-        <div class="chart-wrap ph-mini"><canvas id="phStatusByUcChart"></canvas></div>
-      </div>
-    </section>
-  </div>
-
-  <!-- Section 3 — In Progress & Upcoming Activities (grouped by Use Case, horizontally scrollable) -->
-  <div class="card" style="margin-top:16px">
-    <div class="section-title">
-      <h2>📋 In Progress &amp; Upcoming Activities</h2>
-      <span class="hint">grouped by Use Case — assignees shown</span>
-    </div>
-    <div class="ph-uc-scroller">
-      <button class="ph-uc-scroll-btn left"  id="phUcScrollPrev" type="button" aria-label="Scroll left">‹</button>
-      <div id="phUseCaseGrid" class="ph-usecase-grid"></div>
-      <button class="ph-uc-scroll-btn right" id="phUcScrollNext" type="button" aria-label="Scroll right">›</button>
-    </div>
-  </div>
-
-  <!-- Section 4 — Milestones timeline (sourced from the Milestones table) -->
-  <div class="card" style="margin-top:16px">
-    <div class="section-title">
-      <h2>🗺️ Milestones</h2>
-      <span class="hint">grouped by status, sorted by date</span>
-    </div>
-    <div class="filters">
-      <input id="mSearch" type="search" placeholder="Search milestones..." />
-      <button class="btn clear" id="mClear" type="button">Clear</button>
-    </div>
-    <div id="milestonesList"></div>
-  </div>
-
-  <!-- Section 5 — Collapsible 'Task Summary' (Kanban-style, grouped by person) -->
-  <div class="card" style="margin-top:16px">
-    <button id="phTasksToggle" class="ph-collapse-toggle" type="button" aria-expanded="false" aria-controls="phTasksCollapse">
+  <!-- Section 1 — Progress Highlights -->
+  <div class="card ph-section" data-section="highlights">
+    <button class="ph-section-toggle" type="button" aria-expanded="true">
       <span class="ph-collapse-arrow" aria-hidden="true">▾</span>
-      <span class="ph-collapse-title">📋 Task Summary</span>
-      <span class="ph-collapse-meta">grouped by assignee · click to expand</span>
+      <span class="ph-section-title">📊 Progress Highlights</span>
+      <span class="ph-section-meta">Weekly &amp; Monthly accomplishments</span>
     </button>
-    <div id="phTasksCollapse" class="ph-collapse-body" hidden>
+    <div class="ph-section-body">
+      <div class="ph-highlights-grid">
+        <div class="ph-highlights-col">
+          <div class="ph-highlights-header">
+            <button class="ph-nav-btn" id="phWeekPrev" type="button" aria-label="Previous week">‹</button>
+            <div class="ph-highlights-title">
+              <h3>🗓️ Weekly Accomplishments</h3>
+              <div class="ph-period-label" id="phWeekLabel">—</div>
+            </div>
+            <button class="ph-nav-btn" id="phWeekNext" type="button" aria-label="Next week">›</button>
+          </div>
+          <div id="phWeekList" class="ph-list-col"></div>
+        </div>
+        <div class="ph-highlights-col">
+          <div class="ph-highlights-header">
+            <button class="ph-nav-btn" id="phMonthPrev" type="button" aria-label="Previous month">‹</button>
+            <div class="ph-highlights-title">
+              <h3>🏆 Monthly Accomplishments</h3>
+              <div class="ph-period-label" id="phMonthLabel">—</div>
+            </div>
+            <button class="ph-nav-btn" id="phMonthNext" type="button" aria-label="Next month">›</button>
+          </div>
+          <div id="phMonthList" class="ph-list-col"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 2 — Metrics -->
+  <div class="card ph-section" data-section="metrics" style="margin-top:16px">
+    <button class="ph-section-toggle" type="button" aria-expanded="true">
+      <span class="ph-collapse-arrow" aria-hidden="true">▾</span>
+      <span class="ph-section-title">📈 Metrics</span>
+      <span class="ph-section-meta">status distribution &amp; breakdown</span>
+    </button>
+    <div class="ph-section-body">
+      <div id="phMetricsEmpty" class="ph-empty" style="display:none">No Progress Hub data loaded yet — click ⟳ Refresh Data.</div>
+      <div id="phMetricsContent">
+        <section class="grid ph-metrics-grid">
+          <div class="card">
+            <div class="section-title">
+              <h2>🎯 Completion Status</h2>
+              <span class="hint">overall breakdown</span>
+            </div>
+            <div class="chart-wrap ph-mini"><canvas id="phStatusMixChart"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="section-title">
+              <h2>📊 Status by Use Case</h2>
+              <span class="hint">tasks split by status</span>
+            </div>
+            <div class="chart-wrap ph-mini"><canvas id="phStatusByUcChart"></canvas></div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 3 — In Progress & Upcoming Activities (incl. On Hold) -->
+  <div class="card ph-section" data-section="upcoming" style="margin-top:16px">
+    <button class="ph-section-toggle" type="button" aria-expanded="true">
+      <span class="ph-collapse-arrow" aria-hidden="true">▾</span>
+      <span class="ph-section-title">📋 In Progress &amp; Upcoming Activities</span>
+      <span class="ph-section-meta">grouped by Use Case — assignees shown</span>
+    </button>
+    <div class="ph-section-body">
+      <div class="ph-uc-scroller">
+        <button class="ph-uc-scroll-btn left"  id="phUcScrollPrev" type="button" aria-label="Scroll left">‹</button>
+        <div id="phUseCaseGrid" class="ph-usecase-grid"></div>
+        <button class="ph-uc-scroll-btn right" id="phUcScrollNext" type="button" aria-label="Scroll right">›</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 4 — Completed Activities (new) -->
+  <div class="card ph-section" data-section="completed" style="margin-top:16px">
+    <button class="ph-section-toggle" type="button" aria-expanded="true">
+      <span class="ph-collapse-arrow" aria-hidden="true">▾</span>
+      <span class="ph-section-title">✅ Completed Activities</span>
+      <span class="ph-section-meta">grouped by Use Case — most recent first</span>
+    </button>
+    <div class="ph-section-body">
+      <div class="ph-uc-scroller">
+        <button class="ph-uc-scroll-btn left"  id="phDoneScrollPrev" type="button" aria-label="Scroll left">‹</button>
+        <div id="phDoneGrid" class="ph-usecase-grid"></div>
+        <button class="ph-uc-scroll-btn right" id="phDoneScrollNext" type="button" aria-label="Scroll right">›</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 5 — Milestones -->
+  <div class="card ph-section" data-section="milestones" style="margin-top:16px">
+    <button class="ph-section-toggle" type="button" aria-expanded="true">
+      <span class="ph-collapse-arrow" aria-hidden="true">▾</span>
+      <span class="ph-section-title">🗺️ Milestones</span>
+      <span class="ph-section-meta">grouped by status, sorted by date</span>
+    </button>
+    <div class="ph-section-body">
+      <div class="filters">
+        <input id="mSearch" type="search" placeholder="Search milestones..." />
+        <button class="btn clear" id="mClear" type="button">Clear</button>
+      </div>
+      <div id="milestonesList"></div>
+    </div>
+  </div>
+
+  <!-- Section 6 — Task Summary (collapsible by default, like before) -->
+  <div class="card ph-section" data-section="tasks" style="margin-top:16px">
+    <button id="phTasksToggle" class="ph-section-toggle" type="button" aria-expanded="false" aria-controls="phTasksCollapse">
+      <span class="ph-collapse-arrow" aria-hidden="true">▾</span>
+      <span class="ph-section-title">📋 Task Summary</span>
+      <span class="ph-section-meta">grouped by assignee · click to expand</span>
+    </button>
+    <div id="phTasksCollapse" class="ph-section-body" hidden>
       <div class="ph-summary-stats">
         <div class="ph-stat total"><div class="l">Total</div>      <div class="v" id="phStatTotal">0</div></div>
         <div class="ph-stat done"> <div class="l">Completed</div>  <div class="v" id="phStatDone">0</div></div>
@@ -2698,6 +2765,7 @@ const STATUS_META = {
   "In Progress": { cls:"pill-amber", color:"#f4b400" },
   "Yet to start":{ cls:"pill-grey",  color:"#9aa0a6" },
   "Yet to Start":{ cls:"pill-grey",  color:"#9aa0a6" },
+  "On Hold":     { cls:"pill-red",   color:"#db4437" },
   "Blocked":     { cls:"pill-red",   color:"#db4437" }
 };
 function normalizeStatus(s){
@@ -2706,6 +2774,7 @@ function normalizeStatus(s){
   if (k === "in progress")  return "In Progress";
   if (k === "completed")    return "Completed";
   if (k === "blocked")      return "Blocked";
+  if (k === "on hold" || k === "hold" || k === "on-hold") return "On Hold";
   return (s||"").trim() || "Unknown";
 }
 
@@ -3165,7 +3234,10 @@ function renderPhMetrics(){
     options: {
       indexAxis: "y", responsive: true, maintainAspectRatio: false,
       animation: SHARED_ANIM,
-      scales: { x: {stacked: true, ...SHARED_GRID_X}, y: {stacked: true, ...SHARED_GRID_Y} },
+      scales: {
+        x: {stacked: true, ...SHARED_GRID_X},
+        y: {stacked: true, ...SHARED_GRID_Y, ticks:{color:"#64748b", font:{size:10}}}
+      },
       plugins: {
         legend: {position:"bottom", labels:{usePointStyle:true, pointStyle:"circle", boxWidth:8, padding:14}},
         tooltip: { ...SHARED_TOOLTIP, mode:"index" }
@@ -3224,7 +3296,23 @@ function renderProgressHub(){
   renderHighlightWeek();
   renderHighlightMonth();
 
-  // Section 3 — By Use Case grid (in-progress + future per usecase, with assignees)
+  // ----- Per-Use-Case card renderer (shared by In Progress + Completed Activities) -----
+  const itemHtml = (i, kind) => {
+    const dateText = i.start && i.end
+      ? `${fmtDate(i.start)} → ${fmtDate(i.end)}`
+      : (i.end ? fmtDate(i.end) : (i.start ? fmtDate(i.start) : ""));
+    return `
+      <div class="ph-uc-item ${kind}">
+        <div class="t">${escapeHtml(i.task||"—")}</div>
+        <div class="m">
+          ${i.owner ? `<span class="owner-pill">👤 ${escapeHtml(i.owner)}</span>` : `<span class="owner-pill" style="background:#fee2e2;color:#a50e0e">👤 Unassigned</span>`}
+          ${i.week ? `<span class="week-tag">${escapeHtml(i.week)}</span>` : ""}
+          ${dateText ? `<span>📅 ${dateText}</span>` : ""}
+        </div>
+      </div>`;
+  };
+
+  // Section 3 — In Progress & Upcoming (In Progress + On Hold + Yet to Start)
   const ucGrid = $("#phUseCaseGrid");
   if (ucGrid){
     if (!usecases.length){
@@ -3236,35 +3324,25 @@ function renderProgressHub(){
         const items = prog.filter(p => p.usecase === uc);
         const done  = items.filter(i => normalizeStatus(i.status) === "Completed").length;
         const wip   = items.filter(i => normalizeStatus(i.status) === "In Progress");
+        const hold  = items.filter(i => normalizeStatus(i.status) === "On Hold");
         const pend  = items.filter(i => normalizeStatus(i.status) === "Yet to start");
-
-        const itemHtml = (i, kind) => {
-          // Show Start → End range when both exist; otherwise whichever date is available.
-          const dateText = i.start && i.end
-            ? `${fmtDate(i.start)} → ${fmtDate(i.end)}`
-            : (i.end ? fmtDate(i.end) : (i.start ? fmtDate(i.start) : ""));
-          return `
-          <div class="ph-uc-item ${kind}">
-            <div class="t">${escapeHtml(i.task||"—")}</div>
-            <div class="m">
-              ${i.owner ? `<span class="owner-pill">👤 ${escapeHtml(i.owner)}</span>` : `<span class="owner-pill" style="background:#fee2e2;color:#a50e0e">👤 Unassigned</span>`}
-              ${i.week ? `<span class="week-tag">${escapeHtml(i.week)}</span>` : ""}
-              ${dateText ? `<span>📅 ${dateText}</span>` : ""}
-            </div>
-          </div>`;
-        };
 
         const wipSection = wip.length ? `
           <div class="ph-uc-section">
             <div class="ph-uc-section-title">🔄 In Progress · ${wip.length}</div>
             ${wip.map(i => itemHtml(i, "wip")).join("")}
           </div>` : "";
+        const holdSection = hold.length ? `
+          <div class="ph-uc-section">
+            <div class="ph-uc-section-title">⏸️ On Hold · ${hold.length}</div>
+            ${hold.map(i => itemHtml(i, "hold")).join("")}
+          </div>` : "";
         const pendSection = pend.length ? `
           <div class="ph-uc-section">
             <div class="ph-uc-section-title">📥 Future Pipeline · ${pend.length}</div>
             ${pend.map(i => itemHtml(i, "pend")).join("")}
           </div>` : "";
-        const emptySection = (!wip.length && !pend.length) ? `<div class="ph-uc-empty">All work completed for this use case ✓</div>` : "";
+        const emptySection = (!wip.length && !hold.length && !pend.length) ? `<div class="ph-uc-empty">All work completed for this use case ✓</div>` : "";
 
         return `
           <div class="ph-uc-card">
@@ -3273,20 +3351,61 @@ function renderProgressHub(){
               <div class="ph-uc-counts">
                 ${done > 0 ? `<span class="pp done">${done} done</span>` : ""}
                 ${wip.length > 0 ? `<span class="pp wip">${wip.length} active</span>` : ""}
+                ${hold.length > 0 ? `<span class="pp hold">${hold.length} on hold</span>` : ""}
                 ${pend.length > 0 ? `<span class="pp pend">${pend.length} planned</span>` : ""}
               </div>
             </div>
             ${wipSection}
+            ${holdSection}
             ${pendSection}
             ${emptySection}
           </div>`;
       }).join("");
-      // Wire click → open task detail modal. Flatten WIP+Pend per card in render order.
+      // Wire click → open task detail modal. Order: WIP → On Hold → Yet to Start (matches render order)
       ucGrid.querySelectorAll(".ph-uc-card").forEach((cardEl, ucIdx) => {
         const uc = usecases[ucIdx];
         const items = prog.filter(p => p.usecase === uc);
-        const flat = [...items.filter(i => normalizeStatus(i.status) === "In Progress"),
-                      ...items.filter(i => normalizeStatus(i.status) === "Yet to start")];
+        const flat = [
+          ...items.filter(i => normalizeStatus(i.status) === "In Progress"),
+          ...items.filter(i => normalizeStatus(i.status) === "On Hold"),
+          ...items.filter(i => normalizeStatus(i.status) === "Yet to start")
+        ];
+        cardEl.querySelectorAll(".ph-uc-item").forEach((el, idx) => {
+          el.addEventListener("click", () => openTaskDetail(flat[idx]));
+        });
+      });
+    }
+  }
+
+  // Section 4 — Completed Activities grid (one card per usecase, only completed items)
+  const doneGrid = $("#phDoneGrid");
+  if (doneGrid){
+    const ucsWithDone = usecases.filter(uc => prog.some(p => p.usecase === uc && normalizeStatus(p.status) === "Completed"));
+    if (!ucsWithDone.length){
+      doneGrid.innerHTML = `<div class="ph-empty" style="grid-column:1/-1">No completed items yet.</div>`;
+    } else {
+      doneGrid.innerHTML = ucsWithDone.map(uc => {
+        const completed = prog.filter(p => p.usecase === uc && normalizeStatus(p.status) === "Completed")
+          .sort((a,b) => (new Date(b.end||0)) - (new Date(a.end||0)));   // most recent first
+        return `
+          <div class="ph-uc-card">
+            <div class="ph-uc-head">
+              <div class="ph-uc-name">${escapeHtml(uc)}</div>
+              <div class="ph-uc-counts">
+                <span class="pp done">${completed.length} done</span>
+              </div>
+            </div>
+            <div class="ph-uc-section">
+              <div class="ph-uc-section-title">✅ Completed · ${completed.length}</div>
+              ${completed.map(i => itemHtml(i, "done")).join("")}
+            </div>
+          </div>`;
+      }).join("");
+      // Wire click → task detail modal
+      doneGrid.querySelectorAll(".ph-uc-card").forEach((cardEl, ucIdx) => {
+        const uc = ucsWithDone[ucIdx];
+        const flat = prog.filter(p => p.usecase === uc && normalizeStatus(p.status) === "Completed")
+          .sort((a,b) => (new Date(b.end||0)) - (new Date(a.end||0)));
         cardEl.querySelectorAll(".ph-uc-item").forEach((el, idx) => {
           el.addEventListener("click", () => openTaskDetail(flat[idx]));
         });
@@ -3308,46 +3427,54 @@ function renderProgressHub(){
   wirePhNav("phMonthPrev", -1, true);
   wirePhNav("phMonthNext", +1, true);
 
-  // Use Case horizontal scroller — left/right arrows shift by one card width.
-  const ucScroller = $("#phUseCaseGrid");
-  const ucPrev = $("#phUcScrollPrev");
-  const ucNext = $("#phUcScrollNext");
-  if (ucScroller && ucPrev && ucNext){
+  // Use Case horizontal scrollers — left/right arrows shift by one card width.
+  // Same wiring for In Progress & Upcoming AND Completed Activities.
+  const wireScroller = (gridId, prevId, nextId) => {
+    const scroller = document.getElementById(gridId);
+    const prev = document.getElementById(prevId);
+    const next = document.getElementById(nextId);
+    if (!scroller || !prev || !next) return;
     const cardWidth = () => {
-      const c = ucScroller.querySelector(".ph-uc-card");
-      return c ? c.offsetWidth + 14 : 354;  // card width + grid gap
+      const c = scroller.querySelector(".ph-uc-card");
+      return c ? c.offsetWidth + 14 : 354;
     };
-    ucPrev.onclick = () => ucScroller.scrollBy({left:-cardWidth(), behavior:"smooth"});
-    ucNext.onclick = () => ucScroller.scrollBy({left: cardWidth(), behavior:"smooth"});
-    // Toggle disabled state at the ends
+    prev.onclick = () => scroller.scrollBy({left:-cardWidth(), behavior:"smooth"});
+    next.onclick = () => scroller.scrollBy({left: cardWidth(), behavior:"smooth"});
     const updateArrows = () => {
-      const max = ucScroller.scrollWidth - ucScroller.clientWidth;
-      ucPrev.disabled = ucScroller.scrollLeft <= 1;
-      ucNext.disabled = ucScroller.scrollLeft >= max - 1;
+      const max = scroller.scrollWidth - scroller.clientWidth;
+      prev.disabled = scroller.scrollLeft <= 1;
+      next.disabled = scroller.scrollLeft >= max - 1;
     };
-    ucScroller.onscroll = updateArrows;
+    scroller.onscroll = updateArrows;
     requestAnimationFrame(updateArrows);
-  }
+  };
+  wireScroller("phUseCaseGrid", "phUcScrollPrev", "phUcScrollNext");
+  wireScroller("phDoneGrid",    "phDoneScrollPrev", "phDoneScrollNext");
 
-  // All Task Details — toggle expand/collapse + lazy render of the person-grouped kanban.
+  // Make every Dashboard section collapsible. Each .ph-section has a .ph-section-toggle
+  // button at the top and a .ph-section-body sibling. Clicking the toggle flips aria-expanded
+  // and the body's hidden attribute. Task Summary (data-section="tasks") starts collapsed;
+  // all other sections start expanded.
+  $$(".ph-section").forEach(section => {
+    const toggle = section.querySelector(".ph-section-toggle");
+    const body   = section.querySelector(".ph-section-body");
+    if (!toggle || !body) return;
+    // Avoid double-binding when renderProgressHub re-runs
+    if (toggle._wired) return;
+    toggle._wired = true;
+    toggle.addEventListener("click", () => {
+      const expanded = toggle.getAttribute("aria-expanded") === "true";
+      toggle.setAttribute("aria-expanded", expanded ? "false" : "true");
+      body.hidden = expanded;
+      // Lazy-render Task Summary kanban on first open + refresh on every expansion
+      if (!expanded && section.dataset.section === "tasks") renderPhPersonKanban();
+    });
+  });
+
+  // If Task Summary was already expanded before a data refresh, re-render with fresh data.
   const phTasksToggle = $("#phTasksToggle");
-  const phTasksBody   = $("#phTasksCollapse");
-  if (phTasksToggle && phTasksBody){
-    phTasksToggle.onclick = () => {
-      const expanded = phTasksToggle.getAttribute("aria-expanded") === "true";
-      if (expanded){
-        phTasksToggle.setAttribute("aria-expanded", "false");
-        phTasksBody.hidden = true;
-      } else {
-        phTasksToggle.setAttribute("aria-expanded", "true");
-        phTasksBody.hidden = false;
-        renderPhPersonKanban();
-      }
-    };
-    // If user already expanded the section before a data refresh, re-render with fresh data.
-    if (phTasksToggle.getAttribute("aria-expanded") === "true"){
-      renderPhPersonKanban();
-    }
+  if (phTasksToggle && phTasksToggle.getAttribute("aria-expanded") === "true"){
+    renderPhPersonKanban();
   }
 }
 
